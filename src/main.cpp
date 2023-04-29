@@ -219,8 +219,10 @@ void TestInputAndSendSMS(void)
 static unsigned long ReadPCFinterval = 0;
 unsigned long mili_time = 0;
 static u_int8_t dataPCFold = 0;
+static u_int8_t LastDataSend = 0;
 static int Readcount = 0; 
 static int indputAndSmsState = 0;
+#define DEBOUNCE_TIME 5
 
    switch (indputAndSmsState) {
       case 0: 
@@ -244,15 +246,23 @@ static int indputAndSmsState = 0;
             // Read byte from i2c PC8574  
             dataPCFread = Wire1.read();
             if ( dataPCFread != dataPCFold )
-            {
+            {  
+               if ( dataPCFread == LastDataSend)
+               {
+                  Readcount = DEBOUNCE_TIME;
+               }
+               else
+               {
+                  Readcount = 0;
+               }
                dataPCFold = dataPCFread;
-               Readcount = 0;
             }
-            else if(Readcount < 5)
+            else if(Readcount < DEBOUNCE_TIME)
             {
                 Readcount++; 
-                if(Readcount == 5)
+                if(Readcount == DEBOUNCE_TIME)
                 {
+                    LastDataSend = dataPCFread;
                     Serial2.println(dataPCFread);
                 }
             }
